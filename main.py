@@ -74,18 +74,66 @@ def query_users():
 
 def query_tasks():
     email = input("Enter the email of the user to query tasks: ")
-    user = get_user_by_email(email)
+    user = session.query(User).filter_by(email=email).first()
     if not user:
         print(f'There was no user with that email')
         return
+
     for task in user.tasks:
         print(f"Task ID: {task.id}, Title: {task.title}")
+
+def update_user():
+    email = input("Enter the email of the user to update: ")
+    user = get_user_by_email(email)
+    if not user:
+        print(f'User with email {email} not found.')
+        return
+    user.name = input(f"Enter new name for {user.name} (leave blank to keep current): ") or user.name
+    new_email = input(f"Enter new email for {user.email} (leave blank to keep current): ") or user.email
+    session.commit()  # Commit changes to the database
+    print("User has been updated")
+
+# Deleting
+def delete_user():
+    email = input("Enter the email of the user to delete: ")
+    user = get_user_by_email(email)
+    if not user:
+       print("User with that email does not exist.")
+
+    if confirm_action(f"Are you sure you want to delete: {user.name}?"):
+        session.delete(user)
+        session.commit()
+        print(f"User {user.name} has been deleted.")
+
+def delete_task():
+    email = input("Enter the email of the user to delete a task from: ")
+    user = get_user_by_email(email)
+
+    for task in user.tasks:
+        print(f"Task ID: {task.id}, Title: {task.title}")
+
+
+
+    task_id = input("Enter the ID of the task to delete: ")
+
+    task = next((t for t in user.tasks if str(t.id) == task_id), None) # MAking sure the tasks are associated with the user
+
+
+    if confirm_action(f"Are you sure you want to delete task: {task.title}?"):
+        session.delete(task)
+        session.commit()
+        print("Task has been deleted!")
 # Main Ops
 
 def main() -> None:
     actions = {
         "1": add_user,
         "2": add_task,
+        "3": query_users,
+        "4": query_tasks,
+        "5": update_user,
+        "6": delete_user,
+        "7": delete_task,
     }
 
     while True:
